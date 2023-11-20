@@ -1,16 +1,17 @@
-#!/usr/bin/env python3  
-import roslib
+#!/usr/bin/env python
 import rospy
 import math
 import tf
 import geometry_msgs.msg
-import turtlesim.srv
+from docking import Docking
+
+
 
 if __name__ == '__main__':
     rospy.init_node('turtle_tf_listener')
 
+    docking = Docking()
     listener = tf.TransformListener()
-
     dock_vel = rospy.Publisher('/nav_vel', geometry_msgs.msg.Twist,queue_size=1)
 
     rate = rospy.Rate(10.0)
@@ -19,7 +20,7 @@ if __name__ == '__main__':
 
         try:
             (trans,rot) = listener.lookupTransform('/base_link', '/dock', rospy.Time(0))
-            print(trans)
+            # print(trans)
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             continue
         
@@ -30,7 +31,8 @@ if __name__ == '__main__':
         cmd.linear.x = linear
         cmd.angular.z = angular
         print(distance)
-        if distance>0.3:
+        if distance > 0.3 and docking.distance_no_change_count(distance) < docking.count_max:
+            print(docking.count)
             dock_vel.publish(cmd)
         else:
             cmd.linear.x = 0
