@@ -1,4 +1,4 @@
-#!/usr/bin/env python  
+#!/usr/bin/env python3  
 import roslib
 import rospy
 import math
@@ -24,13 +24,13 @@ if __name__ == '__main__':
             continue
         
         distance = math.sqrt(trans[0] ** 2 + trans[1] ** 2)
-        angular = 1.5 * math.atan2(trans[1], trans[0])
+        angular = 0.5 * math.atan2(trans[1], trans[0])
         linear = 0.1 * distance
         
         cmd.linear.x = linear
         cmd.angular.z = angular
         print(distance)
-        if distance>1.7:
+        if distance>0.3:
             dock_vel.publish(cmd)
         else:
             cmd.linear.x = 0
