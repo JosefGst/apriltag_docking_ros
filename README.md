@@ -1,5 +1,5 @@
 # Apriltag Docking ROS
-![noetic badge](https://github.com/JosefGst/apriltag_docking_ros/actions/workflows/melodic.yaml/badge.svg)
+![noetic badge](https://github.com/JosefGst/apriltag_docking_ros/actions/workflows/noetic.yaml/badge.svg)
 
 Listens to tf published by for e.g.apriltag node to get the position of the dock.
 
