@@ -1,0 +1,8 @@
+#goal definition
+int32 tagID
+---
+#result definition
+bool success
+---
+#feedback
+float32 distance
