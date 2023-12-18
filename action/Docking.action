@@ -1,5 +1,5 @@
 #goal definition
-int32 tagID
+string dock_tf_name
 ---
 #result definition
 bool success

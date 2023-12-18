@@ -112,7 +112,7 @@ catkin_package(
 #  INCLUDE_DIRS include
  LIBRARIES apriltag_docking_ros
  CATKIN_DEPENDS actionlib actionlib_msgs apriltag_ros rospy
- DEPENDS system_lib
+#  DEPENDS system_lib
 )
 
 ###########
