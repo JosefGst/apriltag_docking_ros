@@ -8,6 +8,7 @@ import math
 
 import apriltag_docking_ros.msg
 import geometry_msgs.msg
+from std_msgs.msg import Bool
 
 from docking import Docking
 
@@ -29,12 +30,18 @@ class DockingAction(object):
         self.linear_gain = 0.1
         self.goal_distance = 0.33
 
+        self.collision_free = True
+
     
     def stop_robot(self):
         self._cmd.linear.x = 0
         self._cmd.angular.z = 0
         dock_vel.publish(self._cmd)
-      
+
+    def obstacle_callback(self, data):
+        rospy.loginfo(rospy.get_caller_id() + "I heard %s", data)
+        self.collision_free = data
+
     def execute_cb(self, goal):
         # publish info to the console for the user
         rospy.loginfo('Executing, creating apriltag_docking, to goa: %s' % (goal))
@@ -77,7 +84,11 @@ class DockingAction(object):
                 break
             # check if goal reached
             if self._feedback.distance > self.goal_distance:
-                # TODO check if obstacles infront of robot
+                # check if obstacles infront of robot as long as we are further away as 0.3m.
+                if not self.collision_free and self._feedback.distance > 0.25:
+                    self.stop_robot()
+                    self._as.set_aborted(text="collision_free detected")
+                    break
                 dock_vel.publish(self._cmd)
             # succeeded
             else:
@@ -97,6 +108,6 @@ if __name__ == '__main__':
     listener = tf.TransformListener()
     docking = Docking()
     dock_vel = rospy.Publisher('/nav_vel', geometry_msgs.msg.Twist,queue_size=1)
-
     server = DockingAction(rospy.get_name())
+    obstacle_sub = rospy.Subscriber("/collision/free", Bool, server.obstacle_callback)
     rospy.spin()
