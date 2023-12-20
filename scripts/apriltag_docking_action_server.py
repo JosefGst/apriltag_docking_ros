@@ -4,7 +4,6 @@ import rospy
 
 import actionlib
 import tf
-from tf.transformations import euler_from_quaternion
 import math
 
 import apriltag_docking_ros.msg
@@ -24,6 +23,12 @@ class DockingAction(object):
         self._as = actionlib.SimpleActionServer(self._action_name, apriltag_docking_ros.msg.DockingAction, execute_cb=self.execute_cb, auto_start = False)
         self._as.start()
 
+        # parameters
+        self.lookahead_dist_multiplier = 0.4
+        self.rotational_gain = 0.9
+        self.linear_gain = 0.1
+        self.goal_distance = 0.33
+
     
     def stop_robot(self):
         self._cmd.linear.x = 0
@@ -31,29 +36,16 @@ class DockingAction(object):
         dock_vel.publish(self._cmd)
       
     def execute_cb(self, goal):
-        # helper variables
-        r = rospy.Rate(1)
-        success = True
-        
-        # parameters
-        lookahead_dist_multiplier = 0.4
-        rotational_gain = 0.5
-        linear_gain = 0.1
-        goal_distance = 0.33
-        
         # publish info to the console for the user
         rospy.loginfo('Executing, creating apriltag_docking, to goa: %s' % (goal))
         
         # start executing the action
         rate = rospy.Rate(10.0)
         while not rospy.is_shutdown():
-            
-
             # check that preempt has not been requested by the client
             if self._as.is_preempt_requested():
                 rospy.loginfo('%s: Preempted' % self._action_name)
                 self._as.set_preempted()
-                success = False
                 break
             try:
                 (trans,rot) = listener.lookupTransform('/base_link', goal.dock_tf_name, rospy.Time(0))
@@ -62,9 +54,9 @@ class DockingAction(object):
                 continue
 
             self._feedback.distance = math.sqrt(trans[0] ** 2 + trans[1] ** 2)
-            lookahead_dist = self._feedback.distance * lookahead_dist_multiplier
+            lookahead_dist = self._feedback.distance * self.lookahead_dist_multiplier
             
-            self._br.sendTransform((0.0, 0.0, trans_tag[2] - math.sqrt(lookahead_dist**2 - trans_tag[0]**2)), 
+            self._br.sendTransform((0.0, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
                                    (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "goal", goal.dock_tf_name)
 
             try:
@@ -72,9 +64,9 @@ class DockingAction(object):
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue    
 
-            angular = rotational_gain * math.atan2(trans_goal[1], trans_goal[0])
+            angular = self.rotational_gain * math.atan2(trans_goal[1], trans_goal[0])
             # print("angular: %f" % angular)
-            linear = linear_gain * self._feedback.distance
+            linear = self.linear_gain * self._feedback.distance
             self._cmd.linear.x = linear
             self._cmd.angular.z = angular
             
@@ -84,7 +76,8 @@ class DockingAction(object):
                 self.stop_robot()
                 break
             # check if goal reached
-            if self._feedback.distance > goal_distance:
+            if self._feedback.distance > self.goal_distance:
+                # TODO check if obstacles infront of robot
                 dock_vel.publish(self._cmd)
             # succeeded
             else:

@@ -45,4 +45,5 @@ TODO:
 - [x] use pure persuit like controller
 - [x] use ros action
 - [ ] obstacle detection
+- [ ] reusable
 
