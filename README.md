@@ -13,6 +13,10 @@ Robot will aproach charger perpendicular.
 
     rosrun apriltag_docking_ros apriltag_docking_action_server.py
 
+## Usage on TKO-robot
+Pupblish the **/apriltag_docking/goal** topic and specify the "dock_tf_name". The robot will approach the named tf/tag.
+Subscribe to **/apriltag_docking/status** and read the "status" value to check the operation.
+
 ## Topics
 ### /apriltag_docking/cancel
 publish:
@@ -36,9 +40,6 @@ subscribe:
     - 3 goal reached
     - 4 aborted
 
-## Usage on TKO-robot
-Pupblish the **/apriltag_docking/goal** topic and specify the "dock_tf_name". The robot will approach the named tf/tag.
-Subscribe to **/apriltag_docking/status** and read the "status" value to check the operation.
 
 TODO:
 - [x] use pure persuit like controller
