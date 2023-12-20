@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import rospy
 
@@ -35,8 +35,11 @@ class DockingAction(object):
         r = rospy.Rate(1)
         success = True
         
-        # append the seeds for the apriltag_docking sequence
+        # parameters
         lookahead_dist_multiplier = 0.4
+        rotational_gain = 0.5
+        linear_gain = 0.1
+        goal_distance = 0.33
         
         # publish info to the console for the user
         rospy.loginfo('Executing, creating apriltag_docking, to goa: %s' % (goal))
@@ -62,16 +65,16 @@ class DockingAction(object):
             lookahead_dist = self._feedback.distance * lookahead_dist_multiplier
             
             self._br.sendTransform((0.0, 0.0, trans_tag[2] - math.sqrt(lookahead_dist**2 - trans_tag[0]**2)), 
-                                   (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "goal", "DOCK")
+                                   (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "goal", goal.dock_tf_name)
 
             try:
                 (trans_goal,rot) = listener.lookupTransform('/base_link', "goal", rospy.Time(0))
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue    
 
-            angular = 0.65 * math.atan2(trans_goal[1], trans_goal[0])
+            angular = rotational_gain * math.atan2(trans_goal[1], trans_goal[0])
             # print("angular: %f" % angular)
-            linear = 0.1 * self._feedback.distance
+            linear = linear_gain * self._feedback.distance
             self._cmd.linear.x = linear
             self._cmd.angular.z = angular
             
@@ -81,7 +84,7 @@ class DockingAction(object):
                 self.stop_robot()
                 break
             # check if goal reached
-            if self._feedback.distance > 1.7:
+            if self._feedback.distance > goal_distance:
                 dock_vel.publish(self._cmd)
             # succeeded
             else:

@@ -1,4 +1,3 @@
-
 class Docking:
     
     def __init__(self, count_max=3):
