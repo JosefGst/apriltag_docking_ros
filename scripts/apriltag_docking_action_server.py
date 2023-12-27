@@ -27,10 +27,11 @@ class DockingAction(object):
         self.collision_detections = 1
 
         # parameters
-        self.lookahead_dist_multiplier = 0.6
-        self.rotational_gain = 1.5
-        self.linear_gain = 0.1
-        self.goal_distance = 0.33
+        self.lookahead_dist_multiplier = rospy.get_param("~lookahead_dist_multiplier")
+        self.rotational_vel_gain = rospy.get_param("~rotational_vel_gain")
+        self.linear_vel_gain = rospy.get_param("~linear_vel_gain")
+        self.goal_tolerance = rospy.get_param("~goal_tolerance")
+        self.tag_on_ceiling = rospy.get_param("~tag_on_ceiling")
 
     
     def stop_robot(self):
@@ -55,15 +56,19 @@ class DockingAction(object):
                 self._as.set_preempted()
                 break
             try:
-                (trans,rot) = listener.lookupTransform('/base_link', goal.dock_tf_name, rospy.Time(0))
                 (trans_tag,rot_tag) = listener.lookupTransform(goal.dock_tf_name, '/base_link', rospy.Time(0))
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue
-
-            self._feedback.distance = math.sqrt(trans[0] ** 2 + trans[1] ** 2)
-            lookahead_dist = self._feedback.distance * self.lookahead_dist_multiplier
             
-            self._br.sendTransform((0.0, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
+            if self.tag_on_ceiling:
+                self._feedback.distance = math.sqrt(trans_tag[0] ** 2 + trans_tag[1] ** 2)
+                # calc goal tf
+                self._br.sendTransform((0.0, trans_tag[1] - self.lookahead_dist_multiplier * self._feedback.distance, 0.0), 
+                                   (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "goal", goal.dock_tf_name)
+            else:
+                self._feedback.distance = math.sqrt(trans_tag[0] ** 2 + trans_tag[2] ** 2)
+                # calc goal tf
+                self._br.sendTransform((0.0, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
                                    (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "goal", goal.dock_tf_name)
 
             try:
@@ -71,9 +76,9 @@ class DockingAction(object):
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue    
 
-            angular = self.rotational_gain * math.atan2(trans_goal[1], trans_goal[0])
+            angular = self.rotational_vel_gain * math.atan2(trans_goal[1], trans_goal[0])
             # print("angular: %f" % angular)
-            linear = self.linear_gain * self._feedback.distance
+            linear = self.linear_vel_gain * self._feedback.distance
             self._cmd.linear.x = linear
             self._cmd.angular.z = angular
             
@@ -83,8 +88,8 @@ class DockingAction(object):
                 self.stop_robot()
                 break
             # check if goal reached
-            if self._feedback.distance > self.goal_distance:
-                # check if obstacles infront of robot as long as we are further away as 0.3m.
+            if self._feedback.distance > self.goal_tolerance:
+                # check if obstacles infront of robot, as long as we are further away as 0.25m.
                 if self.collision_detections > 5 and self._feedback.distance > (0.33 + 0.25):
                     rospy.loginfo("Collision detected, STOP!")
                     self.stop_robot()
