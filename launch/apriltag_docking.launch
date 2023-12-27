@@ -3,8 +3,8 @@
     <param name="apriltag_docking/lookahead_dist_multiplier" type="double" value="0.6" />
     <param name="apriltag_docking/rotational_vel_gain" type="double" value="1.5" />
     <param name="apriltag_docking/linear_vel_gain" type="double" value="0.1" />
-    <param name="apriltag_docking/goal_tolerance" type="double" value="0.33" />
-    <param name="apriltag_docking/docking_timeout" type="double" value="30" />
+    <param name="apriltag_docking/goal_tolerance" type="double" value="0.50" /> <!-- 0.33-->
+    <param name="apriltag_docking/docking_timeout" type="double" value="40" />
     <param name="apriltag_docking/tag_on_ceiling" type="bool" value="False" />
     <node name="apriltag_docking" pkg="apriltag_docking_ros" type="apriltag_docking_action_server.py" output="screen"/>
 
@@ -13,7 +13,7 @@
     <param name="apriltag_docking_ceiling/rotational_vel_gain" type="double" value="1.5" />
     <param name="apriltag_docking_ceiling/linear_vel_gain" type="double" value="0.1" />
     <param name="apriltag_docking_ceiling/goal_tolerance" type="double" value="0.1" />
-    <param name="apriltag_docking/docking_timeout" type="double" value="20" />
+    <param name="apriltag_docking_ceiling/docking_timeout" type="double" value="20" />
     <param name="apriltag_docking_ceiling/tag_on_ceiling" type="bool" value="True" />
     <node name="apriltag_docking_ceiling" pkg="apriltag_docking_ros" type="apriltag_docking_action_server.py" output="screen"/>
 </launch>
