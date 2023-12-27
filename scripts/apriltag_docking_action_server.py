@@ -31,6 +31,7 @@ class DockingAction(object):
         self.rotational_vel_gain = rospy.get_param("~rotational_vel_gain")
         self.linear_vel_gain = rospy.get_param("~linear_vel_gain")
         self.goal_tolerance = rospy.get_param("~goal_tolerance")
+        self.docking_timeout = rospy.get_param("~docking_timeout")
         self.tag_on_ceiling = rospy.get_param("~tag_on_ceiling")
 
     
@@ -49,6 +50,8 @@ class DockingAction(object):
         
         # start executing the action
         rate = rospy.Rate(10.0)
+        start_time = rospy.Time.now()  # Get the current time
+
         while not rospy.is_shutdown():
             # check that preempt has not been requested by the client
             if self._as.is_preempt_requested():
@@ -64,15 +67,15 @@ class DockingAction(object):
                 self._feedback.distance = math.sqrt(trans_tag[0] ** 2 + trans_tag[1] ** 2)
                 # calc goal tf
                 self._br.sendTransform((0.0, trans_tag[1] - self.lookahead_dist_multiplier * self._feedback.distance, 0.0), 
-                                   (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "goal", goal.dock_tf_name)
+                                   (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
             else:
                 self._feedback.distance = math.sqrt(trans_tag[0] ** 2 + trans_tag[2] ** 2)
                 # calc goal tf
                 self._br.sendTransform((0.0, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
-                                   (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "goal", goal.dock_tf_name)
+                                   (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
 
             try:
-                (trans_goal,rot) = listener.lookupTransform('/base_link', "goal", rospy.Time(0))
+                (trans_goal,rot) = listener.lookupTransform('/base_link', "waypoint", rospy.Time(0))
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue    
 
@@ -81,6 +84,13 @@ class DockingAction(object):
             linear = self.linear_vel_gain * self._feedback.distance
             self._cmd.linear.x = linear
             self._cmd.angular.z = angular
+
+            # Abort if docking takes too long
+            current_time = rospy.Time.now()  # Get the current time
+            if (current_time - start_time).to_sec() >= self.docking_timeout:
+                self._as.set_aborted(text="docking timed out, aborted")
+                self.stop_robot()
+                break
             
             # check if tag is still detected
             if docking.distance_no_change_count(self._feedback.distance) > docking.count_max: 
@@ -91,7 +101,7 @@ class DockingAction(object):
             if self._feedback.distance > self.goal_tolerance:
                 # check if obstacles infront of robot, as long as we are further away as 0.25m.
                 if self.collision_detections > 5 and self._feedback.distance > (0.33 + 0.25):
-                    rospy.loginfo("Collision detected, STOP!")
+                    rospy.loginfo("Collision detected, aborted!")
                     self.stop_robot()
                     self._as.set_aborted(text="collision detected, aborted")
                     break

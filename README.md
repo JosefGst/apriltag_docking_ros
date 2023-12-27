@@ -26,6 +26,8 @@ increase rotational velecity
 increase linear velecity
 - goal_tolerance (double)
 The tolerance in meters for the controller in the x & y distance when achieving a goal
+- docking_timeout
+timeout in seconds. If docking takes longer then docking_timeout, abort.
 - tag_on_ceiling (bool)
 true if tag is mounted on the ceiling
 
