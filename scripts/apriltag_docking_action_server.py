@@ -5,6 +5,7 @@ import rospy
 import actionlib
 import tf
 import math
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 import apriltag_docking_ros.msg
 import geometry_msgs.msg
@@ -39,6 +40,37 @@ class DockingAction(object):
         self._cmd.linear.x = 0.0
         self._cmd.angular.z = 0.0
         dock_vel.publish(self._cmd)
+    
+    def go_straight(self):
+        self._cmd.linear.x = 0.1
+        self._cmd.angular.z = 0.0
+        dock_vel.publish(self._cmd)
+    
+    def orient_to_goal(self, goal):
+        rate = rospy.Rate(10.0)
+        rospy.loginfo('Orient robot to goal: %s' % (goal))
+        while not rospy.is_shutdown():
+            try:
+                (trans_tag,rot_tag) = listener.lookupTransform('/base_link', goal.dock_tf_name, rospy.Time(0))
+                # print(rot_tag)
+                (roll, pitch, yaw) = euler_from_quaternion (rot_tag)
+                yaw = yaw + 1.52 # rot  frame by 90deg
+                # print("roll: %f, pitch %f, yaw %f" % (roll, pitch, yaw))
+            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                continue
+
+            angular = 1.0 * yaw
+            self._cmd.linear.x = 0.0
+            self._cmd.angular.z = angular
+            dock_vel.publish(self._cmd)
+
+            if abs(yaw) < 0.03: # rotational error less then .5deg
+                self.stop_robot()
+                rospy.loginfo('rot tolerance reached')
+                break
+
+            rate.sleep()
+
 
     def obstacle_callback(self, data):
         # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data)
@@ -108,7 +140,9 @@ class DockingAction(object):
                 dock_vel.publish(self._cmd)
             # succeeded
             else:
-                sleep(0.3)
+                self.orient_to_goal(goal)
+                self.go_straight()
+                sleep(1.0)
                 self.stop_robot()
                 self._result.success = True
                 self._as.set_succeeded(True, text="Succeeded docking to %s" % goal.dock_tf_name)

@@ -1,6 +1,6 @@
 <launch>
     <!-- tag on wall -->
-    <param name="apriltag_docking/lookahead_dist_multiplier" type="double" value="0.6" />
+    <param name="apriltag_docking/lookahead_dist_multiplier" type="double" value="0.4" />
     <param name="apriltag_docking/rotational_vel_gain" type="double" value="1.5" />
     <param name="apriltag_docking/linear_vel_gain" type="double" value="0.1" />
     <param name="apriltag_docking/goal_tolerance" type="double" value="0.50" /> <!-- 0.33-->
