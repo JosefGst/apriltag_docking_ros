@@ -3,7 +3,7 @@
     <param name="apriltag_docking/lookahead_dist_multiplier" type="double" value="0.4" />
     <param name="apriltag_docking/rotational_vel_gain" type="double" value="1.5" />
     <param name="apriltag_docking/linear_vel_gain" type="double" value="0.1" />
-    <param name="apriltag_docking/goal_tolerance" type="double" value="0.50" /> <!-- 0.33-->
+    <param name="apriltag_docking/goal_tolerance" type="double" value="0.31" /> <!-- 0.33-->
     <param name="apriltag_docking/docking_timeout" type="double" value="40" />
     <param name="apriltag_docking/tag_on_ceiling" type="bool" value="False" />
     <node name="apriltag_docking" pkg="apriltag_docking_ros" type="apriltag_docking_action_server.py" output="screen"/>

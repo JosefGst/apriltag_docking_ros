@@ -42,7 +42,7 @@ class DockingAction(object):
         dock_vel.publish(self._cmd)
     
     def go_straight(self):
-        self._cmd.linear.x = 0.1
+        self._cmd.linear.x = 0.05
         self._cmd.angular.z = 0.0
         dock_vel.publish(self._cmd)
     
@@ -59,7 +59,7 @@ class DockingAction(object):
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue
 
-            angular = 1.0 * yaw
+            angular = .50 * yaw
             self._cmd.linear.x = 0.0
             self._cmd.angular.z = angular
             dock_vel.publish(self._cmd)
@@ -140,9 +140,9 @@ class DockingAction(object):
                 dock_vel.publish(self._cmd)
             # succeeded
             else:
-                self.orient_to_goal(goal)
-                self.go_straight()
-                sleep(1.0)
+                # self.orient_to_goal(goal)
+                # self.go_straight()
+                # sleep(6.0)
                 self.stop_robot()
                 self._result.success = True
                 self._as.set_succeeded(True, text="Succeeded docking to %s" % goal.dock_tf_name)
