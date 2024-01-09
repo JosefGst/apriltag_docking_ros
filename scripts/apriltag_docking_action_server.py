@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 
 import rospy
 
@@ -78,7 +78,7 @@ class DockingAction(object):
 
     def execute_cb(self, goal):
         # publish info to the console for the user
-        rospy.loginfo('Executing, creating apriltag_docking, to goa: %s' % (goal))
+        rospy.loginfo('Executing, creating apriltag_docking, to goal: %s' % (goal))
         
         # start executing the action
         rate = rospy.Rate(10.0)
