@@ -1,0 +1,5 @@
+<launch>
+    <!-- tag on wall -->
+    <param name="apriltag_undocking/linear_vel" type="double" value="0.1" />
+    <node name="apriltag_undocking" pkg="apriltag_docking_ros" type="apriltag_undocking_action_server.py" output="screen"/>
+</launch>

@@ -68,8 +68,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate actions in the 'action' folder
 add_action_files(
   DIRECTORY action
-  FILES Docking.action
-  # Action2.action
+  FILES 
+  Docking.action
+  UnDocking.action
 )
 
 ## Generate added messages and services with any dependencies listed here

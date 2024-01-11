@@ -1,0 +1,8 @@
+#goal definition
+float32 backwards_distance
+---
+#result definition
+bool success
+---
+#feedback
+float32 distance
