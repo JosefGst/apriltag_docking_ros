@@ -77,5 +77,5 @@ if __name__ == '__main__':
 
     dock_vel = rospy.Publisher('/nav_vel', geometry_msgs.msg.Twist,queue_size=1)
     server = UnDockingAction(rospy.get_name())
-    obstacle_sub = rospy.Subscriber("/collision/detections", Int16, server.obstacle_callback)
+    obstacle_sub = rospy.Subscriber("/collision_back/detections", Int16, server.obstacle_callback)
     rospy.spin()
