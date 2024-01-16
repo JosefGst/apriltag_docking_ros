@@ -1,5 +1,5 @@
 #goal definition
-float32 backwards_distance
+float32 distance
 ---
 #result definition
 bool success

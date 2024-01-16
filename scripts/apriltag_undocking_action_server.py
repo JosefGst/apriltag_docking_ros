@@ -18,6 +18,8 @@ class UnDockingAction(object):
         self._as = actionlib.SimpleActionServer(self._action_name, apriltag_docking_ros.msg.UnDockingAction, execute_cb=self.execute_cb, auto_start = False)
         self._as.start()
         self.collision_detections = 1
+        self.forward = 1
+        self.backward = -1
 
         # parameters
         self.linear_vel = rospy.get_param("~linear_vel")
@@ -27,8 +29,8 @@ class UnDockingAction(object):
         self._cmd.angular.z = 0.0
         dock_vel.publish(self._cmd)
     
-    def go_straight(self):
-        self._cmd.linear.x = -self.linear_vel
+    def go_straight(self, direction):
+        self._cmd.linear.x = self.linear_vel * direction
         self._cmd.angular.z = 0.0
         dock_vel.publish(self._cmd)
     
@@ -43,10 +45,14 @@ class UnDockingAction(object):
         # start executing the action
         rate = rospy.Rate(10.0)
         start_time = rospy.Time.now()  # Get the current time
+        if goal.distance > 0.0:
+            direction = self.forward
+        else:
+            direction = self.backward
 
         while not rospy.is_shutdown():
             
-            self.go_straight()
+            self.go_straight(direction)
             current_time = rospy.Time.now()
             self._feedback.distance = abs(self._cmd.linear.x * (current_time - start_time).to_sec())
 
@@ -61,7 +67,7 @@ class UnDockingAction(object):
                 self.stop_robot()
                 break
             # check if goal reached
-            if (self._feedback.distance > goal.backwards_distance):
+            if (self._feedback.distance > abs(goal.distance)):
                 self.stop_robot()
                 self._result.success = True
                 self._as.set_succeeded(True, text="Succeeded undocking")
