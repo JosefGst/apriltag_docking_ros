@@ -32,6 +32,7 @@ class DockingAction(object):
         self.rotational_vel_gain = rospy.get_param("~rotational_vel_gain")
         self.linear_vel_gain = rospy.get_param("~linear_vel_gain")
         self.goal_tolerance = rospy.get_param("~goal_tolerance")
+        self.trans_bias = rospy.get_param("~trans_bias")
         self.docking_timeout = rospy.get_param("~docking_timeout")
         self.tag_on_ceiling = rospy.get_param("~tag_on_ceiling")
 
@@ -96,14 +97,14 @@ class DockingAction(object):
                 continue
             
             if self.tag_on_ceiling:
-                self._feedback.distance = math.sqrt(trans_tag[0] ** 2 + trans_tag[1] ** 2)
+                self._feedback.distance = math.sqrt((trans_tag[0] + self.trans_bias)** 2 + trans_tag[1] ** 2)
                 # calc goal tf
-                self._br.sendTransform((0.0, trans_tag[1] - self.lookahead_dist_multiplier * self._feedback.distance, 0.0), 
+                self._br.sendTransform((self.trans_bias, trans_tag[1] - self.lookahead_dist_multiplier * self._feedback.distance, 0.0), 
                                    (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
             else:
-                self._feedback.distance = math.sqrt(trans_tag[0] ** 2 + trans_tag[2] ** 2)
+                self._feedback.distance = math.sqrt((trans_tag[0] + self.trans_bias) ** 2 + trans_tag[2] ** 2)
                 # calc goal tf
-                self._br.sendTransform((0.0, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
+                self._br.sendTransform((self.trans_bias, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
                                    (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
 
             try:

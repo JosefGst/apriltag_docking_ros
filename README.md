@@ -12,6 +12,7 @@ Robot will steer directly to the docking tag.
 Robot will aproach charger perpendicular.
 
     roslaunch apriltag_docking_ros apriltag_docking.launch
+    roslaunch apriltag_docking_ros apriltag_undocking.launch
 
 ## Usage on TKO-robot
 Pupblish the **/apriltag_docking/goal** topic and specify the "dock_tf_name". The robot will approach the named tf/tag.
@@ -26,38 +27,65 @@ increase rotational velecity
 increase linear velecity
 - goal_tolerance (double)
 The tolerance in meters for the controller in the x & y distance when achieving a goal
+- trans_bias
+Can shift the goal to the right with positive values, negative to the left.
 - docking_timeout
 timeout in seconds. If docking takes longer then docking_timeout, abort.
 - tag_on_ceiling (bool)
 true if tag is mounted on the ceiling
 
-## Topics
-- /apriltag_docking/cancel
-    publish:
-    - id: '/apriltag_docking-4-657.69000000'"
-    The id need to match with the id form the feedpack topic.
-    Will cancle the docking action.
-- /apriltag_docking/feedback
-    subscribe:
-    - distance: distance to dock
+## Docking
+### Subscribed Topics
 - /apriltag_docking/goal
-    publish:
     - dock_tf_name: 'dock_name'"
+
         dock_name is the apriltags tf name
+### Published Topics
+- /apriltag_docking/cancel
+    - id: '/apriltag_docking-4-657.69000000'"
+
+        The id need to match with the id form the feedpack topic.
+        Will cancle the docking action.
+
+- /apriltag_docking/feedback
+    - distance
+        
+        distance to dock
+
 - /apriltag_docking/result
 - /apriltag_docking/status
-subscribe:
-    - distance: distance to dock
     - status:
         - 1 processing
         - 2 preempted because new goal received
         - 3 goal reached
         - 4 aborted
 
+## Unndocking
+### Subscribed Topics
+- /apriltag_undocking/goal
+    - distance
+
+        distance in meter the robot should move for undocking. Positive value makes the robot move forward, negative for backwards.
+### Published Topics
+- /apriltag_undocking/cancel
+    - id: '/apriltag_docking-4-657.69000000'"
+
+        The id need to match with the id form the feedpack topic.
+        Will cancle the docking action.
+
+- /apriltag_undocking/feedback
+     - distance
+        
+        distance to dock
+        
+- /apriltag_docking/result
+- /apriltag_docking/status
+    - status:
+        - 1 processing
+        - 2 preempted because new goal received
+        - 3 goal reached
+        - 4 aborted
 
 TODO:
-- [x] use pure persuit like controller
-- [x] use ros action
-- [x] obstacle detection
 - [ ] reusable for tags on ceiling
 
