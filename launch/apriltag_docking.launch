@@ -13,7 +13,7 @@
 
     <!-- tag on ceiling -->
     
-    <node name="apriltag_docking_ceiling" pkg="apriltag_docking_ros" type="apriltag_docking_action_server.py" output="screen">
+    <!-- <node name="apriltag_docking_ceiling" pkg="apriltag_docking_ros" type="apriltag_docking_action_server.py" output="screen">
         <param name="apriltag_docking_ceiling/lookahead_dist_multiplier" type="double" value="0.6" />
         <param name="apriltag_docking_ceiling/rotational_vel_gain" type="double" value="1.5" />
         <param name="apriltag_docking_ceiling/linear_vel_gain" type="double" value="0.1" />
@@ -21,5 +21,5 @@
         <param name="trans_bias" type="double" value="0.1" />
         <param name="apriltag_docking_ceiling/docking_timeout" type="double" value="20" />
         <param name="apriltag_docking_ceiling/tag_on_ceiling" type="bool" value="True" />
-    </node>
+    </node> -->
 </launch>
