@@ -102,7 +102,7 @@ class DockingAction(object):
                 self._br.sendTransform((self.trans_bias, trans_tag[1] - self.lookahead_dist_multiplier * self._feedback.distance, 0.0), 
                                    (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
             else:
-                self._feedback.distance = math.sqrt((trans_tag[0] + self.trans_bias) ** 2 + trans_tag[2] ** 2)
+                self._feedback.distance = trans_tag[2]
                 # calc goal tf
                 self._br.sendTransform((self.trans_bias, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
                                    (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
