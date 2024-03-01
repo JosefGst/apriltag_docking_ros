@@ -89,3 +89,7 @@ true if tag is mounted on the ceiling
 TODO:
 - [ ] reusable for tags on ceiling
 
+## Improvments
+
+- [ ] use behavior tree
+- [ ] make more generic
