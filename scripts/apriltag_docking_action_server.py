@@ -126,7 +126,7 @@ class DockingAction(object):
                 break
             
             # check if tag is still detected
-            if docking.distance_no_change_count(self._feedback.distance) > docking.count_max: 
+            if docking.distance_no_change_count(self._feedback.distance) > docking.tf_not_detected_counter: 
                 self._as.set_aborted(text="can't see tag, aborted")
                 self.stop_robot()
                 break
