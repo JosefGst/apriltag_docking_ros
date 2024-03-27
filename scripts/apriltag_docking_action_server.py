@@ -10,6 +10,7 @@ from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import apriltag_docking_ros.msg
 import geometry_msgs.msg
 from std_msgs.msg import Int16
+from std_msgs.msg import Bool
 
 from docking import Docking
 from time import sleep
@@ -26,6 +27,7 @@ class DockingAction(object):
         self._as = actionlib.SimpleActionServer(self._action_name, apriltag_docking_ros.msg.DockingAction, execute_cb=self.execute_cb, auto_start = False)
         self._as.start()
         self.collision_detections = 1
+        self.charger_detected = False
 
         # parameters
         self.lookahead_dist_multiplier = rospy.get_param("~lookahead_dist_multiplier")
@@ -34,7 +36,7 @@ class DockingAction(object):
         self.goal_tolerance = rospy.get_param("~goal_tolerance")
         self.trans_bias = rospy.get_param("~trans_bias")
         self.docking_timeout = rospy.get_param("~docking_timeout")
-        self.tag_on_ceiling = rospy.get_param("~tag_on_ceiling")
+        self.tag_on_ceiling = rospy.get_param("~tag_on_ceiling", False)
 
     
     def stop_robot(self):
@@ -77,6 +79,10 @@ class DockingAction(object):
         # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data)
         self.collision_detections = data.data
 
+    def charger_detected_callback(self, data):
+        # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
+        self.charger_detected = data.data
+
     def execute_cb(self, goal):
         # publish info to the console for the user
         rospy.loginfo('Executing, creating apriltag_docking, to goal: %s' % (goal))
@@ -84,6 +90,7 @@ class DockingAction(object):
         # start executing the action
         rate = rospy.Rate(10.0)
         start_time = rospy.Time.now()  # Get the current time
+        tf_detection_retries = 0
 
         while not rospy.is_shutdown():
             # check that preempt has not been requested by the client
@@ -96,16 +103,10 @@ class DockingAction(object):
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue
             
-            if self.tag_on_ceiling:
-                self._feedback.distance = math.sqrt((trans_tag[0] + self.trans_bias)** 2 + trans_tag[1] ** 2)
-                # calc goal tf
-                self._br.sendTransform((self.trans_bias, trans_tag[1] - self.lookahead_dist_multiplier * self._feedback.distance, 0.0), 
-                                   (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
-            else:
-                self._feedback.distance = math.sqrt((trans_tag[0] + self.trans_bias) ** 2 + trans_tag[2] ** 2)
-                # calc goal tf
-                self._br.sendTransform((self.trans_bias, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
-                                   (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
+            self._feedback.distance = math.sqrt((trans_tag[0] + self.trans_bias) ** 2 + trans_tag[2] ** 2)
+            # calc goal tf
+            self._br.sendTransform((self.trans_bias, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
+                                (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
 
             try:
                 (trans_goal,rot) = listener.lookupTransform('/base_link', "waypoint", rospy.Time(0))
@@ -130,23 +131,29 @@ class DockingAction(object):
                 self._as.set_aborted(text="can't see tag, aborted")
                 self.stop_robot()
                 break
+            # succeeded
+            if self.charger_detected == True:
+                rospy.loginfo("touched charger")
+                self.stop_robot()
+                self._result.success = True
+                self._as.set_succeeded(True, text="Succeeded docking to %s" % goal.dock_tf_name)
+                break
             # check if goal reached
             if self._feedback.distance > self.goal_tolerance:
                 # check if obstacles infront of robot, as long as we are further away as 0.25m.
-                if self.collision_detections > 5 and self._feedback.distance > (0.33 + 0.25):
+                if self.collision_detections > 5 and self._feedback.distance > (self.goal_tolerance + 0.25):
                     rospy.loginfo("Collision detected, aborted!")
                     self.stop_robot()
                     self._as.set_aborted(text="collision detected, aborted")
                     break
                 dock_vel.publish(self._cmd)
-            # succeeded
             else:
                 # self.orient_to_goal(goal)
                 # self.go_straight()
                 # sleep(6.0)
                 self.stop_robot()
                 self._result.success = True
-                self._as.set_succeeded(True, text="Succeeded docking to %s" % goal.dock_tf_name)
+                self._as.set_aborted(text="overshoot. failed to touch charger, aborted")
                 break
             
             self._as.publish_feedback(self._feedback)
@@ -158,8 +165,9 @@ if __name__ == '__main__':
     rospy.init_node('apriltag_docking')
 
     listener = tf.TransformListener()
-    docking = Docking()
+    docking = Docking(5)
     dock_vel = rospy.Publisher('/nav_vel', geometry_msgs.msg.Twist,queue_size=1)
     server = DockingAction(rospy.get_name())
     obstacle_sub = rospy.Subscriber("/collision/detections", Int16, server.obstacle_callback)
+    charger_sub = rospy.Subscriber("/tko_charger/charger_detected", Bool, server.charger_detected_callback)
     rospy.spin()
