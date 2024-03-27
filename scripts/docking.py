@@ -1,8 +1,11 @@
 class Docking:
+    """
+    checks if the tf is still detected.
+    """
     
-    def __init__(self, count_max=3):
+    def __init__(self, tf_not_detected_counter=3):
         self.count = 0 # count when no tf detected
-        self.count_max = count_max # stop when no tf detected
+        self.tf_not_detected_counter = tf_not_detected_counter # stop when no tf detected
         self.old_distance = 0
         
 
