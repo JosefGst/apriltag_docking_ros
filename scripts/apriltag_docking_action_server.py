@@ -90,7 +90,6 @@ class DockingAction(object):
         # start executing the action
         rate = rospy.Rate(10.0)
         start_time = rospy.Time.now()  # Get the current time
-        tf_detection_retries = 0
 
         while not rospy.is_shutdown():
             # check that preempt has not been requested by the client
