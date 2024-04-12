@@ -67,7 +67,7 @@ class DockingAction(object):
             self._cmd.angular.z = angular
             dock_vel.publish(self._cmd)
 
-            if abs(yaw) < 0.03: # rotational error less then .5deg
+            if abs(yaw) < 0.02: # rotational error less then .5deg
                 self.stop_robot()
                 rospy.loginfo('rot tolerance reached')
                 break
@@ -126,14 +126,14 @@ class DockingAction(object):
                 break
             
             # check if tag is still detected
-            if docking.distance_no_change_count(self._feedback.distance) > docking.tf_not_detected_counter: 
-                self._as.set_aborted(text="can't see tag, aborted")
-                self.stop_robot()
-                break
+            # if docking.distance_no_change_count(self._feedback.distance) > docking.tf_not_detected_counter: 
+            #     self._as.set_aborted(text="can't see tag, aborted")
+            #     self.stop_robot()
+            #     break
             # succeeded
             if self.charger_detected == True:
                 rospy.loginfo("touched charger")
-                self.stop_robot()
+                self.orient_to_goal(goal)
                 self._result.success = True
                 self._as.set_succeeded(True, text="Succeeded docking to %s" % goal.dock_tf_name)
                 break
@@ -147,10 +147,18 @@ class DockingAction(object):
                     break
                 dock_vel.publish(self._cmd)
             else:
+                self.stop_robot()
+                rospy.sleep(1)
+                if self.charger_detected == True:
+                    rospy.loginfo("touched charger")
+                    self.orient_to_goal(goal)
+                    self._result.success = True
+                    self._as.set_succeeded(True, text="Succeeded docking to %s" % goal.dock_tf_name)
+                    break
                 # self.orient_to_goal(goal)
                 # self.go_straight()
                 # sleep(6.0)
-                self.stop_robot()
+                
                 self._result.success = True
                 self._as.set_aborted(text="overshoot. failed to touch charger, aborted")
                 break
