@@ -67,7 +67,7 @@ class DockingAction(object):
             self._cmd.angular.z = angular
             dock_vel.publish(self._cmd)
 
-            if abs(yaw) < 0.02: # rotational error less then .5deg
+            if abs(yaw) < 0.03: # rotational error less then .5deg
                 self.stop_robot()
                 rospy.loginfo('rot tolerance reached')
                 break
