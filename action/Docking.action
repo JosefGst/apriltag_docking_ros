@@ -1,5 +1,7 @@
 #goal definition
 string dock_tf_name
+float32 stop_distance_from_dock
+float32 target_right_side_translation_right_from_dock
 ---
 #result definition
 bool success

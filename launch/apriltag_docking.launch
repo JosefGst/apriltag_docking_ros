@@ -1,15 +1,16 @@
 <launch>
     <!-- tag on wall -->
-    
+    <remap from="nav_vel" to="cmd_vel" />
     <node name="apriltag_docking" pkg="apriltag_docking_ros" type="apriltag_docking_action_server.py" output="screen">
         <param name="lookahead_dist_multiplier" type="double" value="0.4" />
         <param name="rotational_vel_gain" type="double" value="0.5" />
         <param name="linear_vel_gain" type="double" value="0.1" />
-        <param name="trans_bias" type="double" value="0.05" /> <!-- can shift the goal to the right with positive values-->
-        <param name="goal_tolerance" type="double" value="0.30" /> <!-- 0.33-->
+        <!-- <param name="trans_bias" type="double" value="0.05" /> --> <!-- can shift the goal to the right with positive values-->
+        <!-- <param name="goal_tolerance" type="double" value="0.30" /> 0.33 -->
         <param name="docking_timeout" type="double" value="30" />
         <param name="tag_on_ceiling" type="bool" value="False" />
     </node>
+    
 
     <!-- tag on ceiling -->
     

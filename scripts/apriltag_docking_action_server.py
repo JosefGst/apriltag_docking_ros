@@ -104,7 +104,7 @@ class DockingAction(object):
             
             self._feedback.distance = math.sqrt((trans_tag[0] + self.trans_bias) ** 2 + trans_tag[2] ** 2)
             # calc goal tf
-            self._br.sendTransform((self.trans_bias, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
+            self._br.sendTransform((goal.target_right_side_translation_right_from_dock, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
                                 (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
 
             try:
@@ -138,9 +138,9 @@ class DockingAction(object):
                 self._as.set_succeeded(True, text="Succeeded docking to %s" % goal.dock_tf_name)
                 break
             # check if goal reached
-            if self._feedback.distance > self.goal_tolerance:
+            if self._feedback.distance > goal.stop_distance_from_dock:
                 # check if obstacles infront of robot, as long as we are further away as 0.25m.
-                if self.collision_detections > 5 and self._feedback.distance > (self.goal_tolerance + 0.25):
+                if self.collision_detections > 5 and self._feedback.distance > (goal.stop_distance_from_dock + 0.25):
                     rospy.loginfo("Collision detected, aborted!")
                     self.stop_robot()
                     self._as.set_aborted(text="collision detected, aborted")
@@ -160,6 +160,7 @@ class DockingAction(object):
                 # sleep(6.0)
                 
                 self._result.success = True
+                self.orient_to_goal(goal)
                 self._as.set_aborted(text="overshoot. failed to touch charger, aborted")
                 break
             
