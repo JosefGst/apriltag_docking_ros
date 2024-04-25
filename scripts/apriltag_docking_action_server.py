@@ -138,9 +138,9 @@ class DockingAction(object):
                 self._as.set_succeeded(True, text="Succeeded docking to %s" % goal.dock_tf_name)
                 break
             # check if goal reached
-            if self._feedback.distance > goal.stop_distance_from_dock:
+            if trans_tag[2] > goal.stop_distance_from_dock:
                 # check if obstacles infront of robot, as long as we are further away as 0.25m.
-                if self.collision_detections > 5 and self._feedback.distance > (goal.stop_distance_from_dock + 0.25):
+                if self.collision_detections > 5 and trans_tag[2] > (goal.stop_distance_from_dock + 0.25):
                     rospy.loginfo("Collision detected, aborted!")
                     self.stop_robot()
                     self._as.set_aborted(text="collision detected, aborted")
