@@ -33,8 +33,6 @@ class DockingAction(object):
         self.lookahead_dist_multiplier = rospy.get_param("~lookahead_dist_multiplier")
         self.rotational_vel_gain = rospy.get_param("~rotational_vel_gain")
         self.linear_vel_gain = rospy.get_param("~linear_vel_gain")
-        self.goal_tolerance = rospy.get_param("~goal_tolerance")
-        self.trans_bias = rospy.get_param("~trans_bias")
         self.docking_timeout = rospy.get_param("~docking_timeout")
         self.tag_on_ceiling = rospy.get_param("~tag_on_ceiling", False)
 
@@ -102,9 +100,9 @@ class DockingAction(object):
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue
             
-            self._feedback.distance = math.sqrt((trans_tag[0] + self.trans_bias) ** 2 + trans_tag[2] ** 2)
+            self._feedback.distance = trans_tag[2]
             # calc goal tf
-            self._br.sendTransform((goal.target_right_side_translation_right_from_dock, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
+            self._br.sendTransform((goal.dock_tf_x, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
                                 (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
 
             try:
@@ -138,9 +136,9 @@ class DockingAction(object):
                 self._as.set_succeeded(True, text="Succeeded docking to %s" % goal.dock_tf_name)
                 break
             # check if goal reached
-            if trans_tag[2] > goal.stop_distance_from_dock:
+            if trans_tag[2] > goal.dock_tf_z:
                 # check if obstacles infront of robot, as long as we are further away as 0.25m.
-                if self.collision_detections > 5 and trans_tag[2] > (goal.stop_distance_from_dock + 0.25):
+                if self.collision_detections > 5 and trans_tag[2] > (goal.dock_tf_z + 0.25):
                     rospy.loginfo("Collision detected, aborted!")
                     self.stop_robot()
                     self._as.set_aborted(text="collision detected, aborted")
