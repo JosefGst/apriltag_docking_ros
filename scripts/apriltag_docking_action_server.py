@@ -28,6 +28,9 @@ class DockingAction(object):
         self._as.start()
         self.collision_detections = 1
         self.charger_detected = False
+        self.trans_tag = [0,0,0]
+        self.rot_tag = [0,0,0,0]
+        self.lock = [0,0,0]
 
         # parameters
         self.lookahead_dist_multiplier = rospy.get_param("~lookahead_dist_multiplier")
@@ -81,22 +84,40 @@ class DockingAction(object):
         # rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
         self.charger_detected = data.data
 
+    def lock_tf(self, goal):
+        rospy.loginfo('lock_tf')
+        if self._as.is_preempt_requested():
+            rospy.loginfo('%s: Preempted' % self._action_name)
+            self._as.set_preempted()
+        try:
+            (self.trans_tag, self.rot_tag) = listener.lookupTransform('/odom', goal.dock_tf_name, rospy.Time(0))
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+            pass
+    
+        # self._br.sendTransform((self.trans_tag[0], self.trans_tag[1], self.trans_tag[2]),
+        #                         rot_tag, rospy.Time.now(), 'lock', "/odom")
+        return self.trans_tag
+
     def execute_cb(self, goal):
         # publish info to the console for the user
         rospy.loginfo('Executing, creating apriltag_docking, to goal: %s' % (goal))
         
+        self.lock = self.lock_tf(goal)
+
         # start executing the action
         rate = rospy.Rate(10.0)
         start_time = rospy.Time.now()  # Get the current time
 
         while not rospy.is_shutdown():
+            self._br.sendTransform((self.trans_tag[0], self.trans_tag[1], self.trans_tag[2]),
+                                (self.rot_tag[0], self.rot_tag[1], self.rot_tag[2], self.rot_tag[3]), rospy.Time.now(), 'lock', "/odom")
             # check that preempt has not been requested by the client
             if self._as.is_preempt_requested():
                 rospy.loginfo('%s: Preempted' % self._action_name)
                 self._as.set_preempted()
                 break
             try:
-                (trans_tag,rot_tag) = listener.lookupTransform(goal.dock_tf_name, '/base_link', rospy.Time(0))
+                (trans_tag,rot_tag) = listener.lookupTransform('/lock', '/base_link', rospy.Time(0))
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue
             
