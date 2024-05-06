@@ -54,12 +54,14 @@ class DockingAction(object):
         rate = rospy.Rate(10.0)
         rospy.loginfo('Orient robot to goal: %s' % (goal))
         while not rospy.is_shutdown():
+            self._br.sendTransform((self.trans_tag[0], self.trans_tag[1], self.trans_tag[2]),
+                                (self.rot_tag[0], self.rot_tag[1], self.rot_tag[2], self.rot_tag[3]), rospy.Time.now(), 'lock', "/odom")
             try:
-                (trans_tag,rot_tag) = listener.lookupTransform('/base_link', goal.dock_tf_name, rospy.Time(0))
+                (trans_tag,rot_tag) = listener.lookupTransform('/base_link', "lock", rospy.Time(0))
                 # print(rot_tag)
                 (roll, pitch, yaw) = euler_from_quaternion (rot_tag)
-                yaw = yaw + 1.52 # rot  frame by 90deg
-                # print("roll: %f, pitch %f, yaw %f" % (roll, pitch, yaw))
+                yaw = yaw + 1.57 # rot  frame by 90deg
+                print("roll: %f, pitch %f, yaw %f" % (roll, pitch, yaw))
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue
 
@@ -124,7 +126,7 @@ class DockingAction(object):
             self._feedback.distance = trans_tag[2]
             # calc goal tf
             self._br.sendTransform((goal.dock_tf_x, 0.0, trans_tag[2] - self.lookahead_dist_multiplier * self._feedback.distance), 
-                                (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", goal.dock_tf_name)
+                                (0.0, 0.0, 0.0, 1.0), rospy.Time.now(), "waypoint", "lock")
 
             try:
                 (trans_goal,rot) = listener.lookupTransform('/base_link', "waypoint", rospy.Time(0))
