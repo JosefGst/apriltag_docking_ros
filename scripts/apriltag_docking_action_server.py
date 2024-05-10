@@ -73,6 +73,7 @@ class DockingAction(object):
             if abs(yaw) < 0.03: # rotational error less then .5deg
                 self.stop_robot()
                 rospy.loginfo('rot tolerance reached')
+                self.stop_robot()
                 break
 
             rate.sleep()
@@ -161,7 +162,7 @@ class DockingAction(object):
             # check if goal reached
             if trans_tag[2] > goal.dock_tf_z:
                 # check if obstacles infront of robot, as long as we are further away as 0.25m.
-                if self.collision_detections > 5 and trans_tag[2] > (goal.dock_tf_z + 0.25):
+                if self.collision_detections > 5 and trans_tag[2] > (goal.dock_tf_z + 0.35):
                     rospy.loginfo("Collision detected, aborted!")
                     self.stop_robot()
                     self._as.set_aborted(text="collision detected, aborted")
