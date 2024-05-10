@@ -25,10 +25,6 @@ increasae the distance to the new waypoint
 increase rotational velecity
 - linear_vel_gain (double)
 increase linear velecity
-- goal_tolerance (double)
-The tolerance in meters for the controller in the x & y distance when achieving a goal
-- trans_bias
-Can shift the goal to the right with positive values, negative to the left.
 - docking_timeout
 timeout in seconds. If docking takes longer then docking_timeout, abort.
 - tag_on_ceiling (bool)
@@ -37,9 +33,27 @@ true if tag is mounted on the ceiling
 ## Docking
 ### Subscribed Topics
 - /apriltag_docking/goal
+    - dock_tf_z
+        distance to the dock to stop
+    - dock_tf_x
+        positive value will dock the robot more to the right side
     - dock_tf_name: 'dock_name'"
-
         dock_name is the apriltags tf name
+    <br>
+    e.g.: charger
+        dock_tf_z: 0.25
+        dock_tf_x: 0.05
+        dock_name: "CHARGER"
+    <br>
+    e.g.: lift left
+        dock_tf_z: 0.7
+        dock_tf_x: -0.7
+        dock_name: "center"
+    <br>
+    e.g.: lift right
+        dock_tf_z: 0.7
+        dock_tf_x: 0.7
+        dock_name: "center"    
 ### Published Topics
 - /apriltag_docking/cancel
     - id: '/apriltag_docking-4-657.69000000'"
