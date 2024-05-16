@@ -41,8 +41,8 @@ true if tag is mounted on the ceiling
         dock_name is the apriltags tf name
     <br>
     e.g.: charger
-        dock_tf_z: 0.22
-        dock_tf_x: 0.05
+        dock_tf_z: 0.2
+        dock_tf_x: -0.03
         dock_name: "CHARGER"
     <br>
     e.g.: lift left
